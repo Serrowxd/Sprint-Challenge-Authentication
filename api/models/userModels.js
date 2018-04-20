@@ -9,6 +9,7 @@ const UserSchema = Schema({
     type: String,
     required: true,
     unique: true,
+    lowercase: true,
   },
   password: {
     type: String,
@@ -22,7 +23,7 @@ UserSchema.pre('save', function(next) {
   // if there is an error here you'll need to handle it by calling next(err);
   // Once the password is encrypted, call next() so that your userController and create a user
   console.log('pre save');
-  bcrypt.hash(this.password, 8, (err, hash) => {
+  bcrypt.hash(this.password, SALT_ROUNDS, (err, hash) => {
     if (err) {
       return next(err);
     }
@@ -38,6 +39,14 @@ UserSchema.methods.checkPassword = function(plainTextPW, callBack) {
   // Fill this method in with the Proper password comparing, bcrypt.compare()
   // Your controller will be responsible for sending the information here for password comparison
   // Once you have the user, you'll need to pass the encrypted pw and the plaintext pw to the compare function
+  return bcrypt.compare(plainTextPW, function(err, isValid) {
+    if (err) {
+      return callBack(err);
+    }
+
+    // if no error
+    callBack(null, isValid);
+  });
 };
 
 module.exports = mongoose.model('User', UserSchema);
